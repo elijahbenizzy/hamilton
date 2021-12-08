@@ -8,7 +8,7 @@ import logging
 from types import ModuleType
 from typing import Type, Dict, Any, Callable, Tuple, Set, Collection, List
 
-from hamilton import function_modifiers
+import hamilton.function_modifiers_base
 from hamilton import node
 from hamilton.node import NodeSource, DependencyType
 
@@ -50,6 +50,7 @@ def add_dependency(
     if param_name in nodes:
         # validate types match
         required_node = nodes[param_name]
+        print(required_node.type, param_type)
         if param_type == dict and issubclass(required_node.type, Dict):  # python3.7 changed issubclass behavior
             pass
         elif param_type == list and issubclass(required_node.type, List):  # python3.7 changed issubclass behavior
@@ -79,9 +80,9 @@ def create_function_graph(*modules: ModuleType, config: Dict[str, Any]) -> Dict[
 
     # create nodes -- easier to just create this in one loop
     for func_name, f in functions:
-        for n in function_modifiers.resolve_nodes(f, config):
+        for n in hamilton.function_modifiers_base.resolve_nodes(f, config):
             if n.name in config:
-                continue # This makes sure we overwrite things if they're in the config...
+                continue  # This makes sure we overwrite things if they're in the config...
             if n.name in nodes:
                 raise ValueError(f'Cannot define function {n.name} more than once.'
                                  f' Already defined by function {f}')
@@ -197,6 +198,7 @@ class FunctionGraph(object):
     def directional_dfs_traverse(self, next_nodes_fn: Callable[[node.Node], Collection[node.Node]], starting_nodes: List[str]):
         nodes = set()
         user_nodes = set()
+
         def dfs_traverse(node: node.Node):
             for n in next_nodes_fn(node):
                 if n not in nodes:
@@ -238,7 +240,7 @@ class FunctionGraph(object):
         if computed is None:
             computed = {}
 
-        def dfs_traverse(node: node.Node, dependency_type: DependencyType=DependencyType.REQUIRED):
+        def dfs_traverse(node: node.Node, dependency_type: DependencyType = DependencyType.REQUIRED):
             for n in node.dependencies:
 
                 if n.name not in computed:
