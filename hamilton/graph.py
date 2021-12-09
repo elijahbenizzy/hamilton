@@ -5,6 +5,7 @@ It should only be able the graph & things required to create and traverse one.
 """
 import inspect
 import logging
+import typing
 from types import ModuleType
 from typing import Type, Dict, Any, Callable, Tuple, Set, Collection, List
 
@@ -18,6 +19,18 @@ logger = logging.getLogger(__name__)
 # kind of hacky for now but it will work
 def is_submodule(child: ModuleType, parent: ModuleType):
     return parent.__name__ in child.__name__
+
+
+def permitted_type(requested_type: Type[Type], param_type: Type[Type]):
+    if requested_type == typing.Any:
+        return True
+    if param_type == dict and issubclass(requested_type, Dict):  # python3.7 changed issubclass behavior
+        return True
+    if param_type == list and issubclass(requested_type, List):  # python3.7 changed issubclass behavior
+        return True
+    if issubclass(requested_type, param_type):
+        return True
+    return False
 
 
 def find_functions(function_module: ModuleType) -> List[Tuple[str, Callable]]:
@@ -50,14 +63,7 @@ def add_dependency(
     if param_name in nodes:
         # validate types match
         required_node = nodes[param_name]
-        print(required_node.type, param_type)
-        if param_type == dict and issubclass(required_node.type, Dict):  # python3.7 changed issubclass behavior
-            pass
-        elif param_type == list and issubclass(required_node.type, List):  # python3.7 changed issubclass behavior
-            pass
-        elif issubclass(required_node.type, param_type):
-            pass
-        else:
+        if not permitted_type(required_node.type, param_type):
             raise ValueError(f'Error: {func_name} is expecting {param_name}:{param_type}, but found '
                              f'{param_name}:{required_node.type}. All names & types must match.')
     else:
