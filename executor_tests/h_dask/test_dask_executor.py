@@ -1,14 +1,14 @@
+import numpy as np
 import pandas as pd
-from hamilton.dask_executor import DaskExecutor
 import pytest
 
-from dask import compute
 from dask.delayed import delayed
 from distributed import Client
 
-from hamilton.driver import Driver
+from hamilton import driver
+from hamilton.experimental import h_dask
 
-from ..resources import example_module
+from .resources import example_module
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def test_dask_executor(client):
         'spend': delayed(lambda: pd.Series([10, 10, 20, 40, 40, 50]))(),
     }
 
-    dr = Driver(initial_columns, example_module, executor=DaskExecutor())
+    dr = driver.Driver(initial_columns, example_module, executor=h_dask.DaskExecutor(client))
 
     output_columns = [
         'spend',
@@ -37,4 +37,6 @@ def test_dask_executor(client):
     df = dr.execute(output_columns)
 
     assert set(df) == set(output_columns)
+    expected_column = pd.Series([0.0, 0.0, 13.33333, 23.33333, 33.33333, 43.33333], name='avg_3wk_spend')
+    pd.testing.assert_series_equal(df.avg_3wk_spend.fillna(0.0), expected_column)  # fill na to get around NaN
     # TODO: do some more asserting?

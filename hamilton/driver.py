@@ -78,7 +78,7 @@ class Driver(object):
         :return: a data frame consisting of the variables requested.
         """
         columns = self.raw_execute(final_vars, overrides, display_graph)
-        return self.executor.build_data_frame(columns)
+        return self.executor.build_result(columns)
 
     def raw_execute(self,
                     final_vars: List[str],
