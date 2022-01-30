@@ -14,7 +14,7 @@ if __name__ == '__main__':
     import graph
     import node
 else:
-    from . import graph
+    from . import graph, base
     from . import node
 
 logger = logging.getLogger(__name__)
@@ -32,15 +32,17 @@ class Variable:
 class Driver(object):
     """This class orchestrates creating and executing the DAG to create a dataframe."""
 
-    def __init__(self, config: Dict[str, Any], *modules: ModuleType, executor=None):
+    def __init__(self, config: Dict[str, Any], *modules: ModuleType, executor: base.HamiltonExecutor = None):
         """Constructor: creates a DAG given the configuration & modules to crawl.
 
         :param config: This is a dictionary of initial data & configuration.
                        The contents are used to help create the DAG.
         :param modules: Python module objects you want to inspect for Hamilton Functions.
+        :param executor: Optional. A way to wire in another way of executing a hamilton graph.
+                        Defaults to using original Hamilton executor. Single threaded in memory python.
         """
         if executor is None:
-            executor = DirectExecutor()
+            executor = base.SimplePythonDataFrameExecutor()
 
         self.graph = graph.FunctionGraph(*modules, config=config, executor=executor)
         self.executor = executor
@@ -116,17 +118,6 @@ class Driver(object):
     def display_all_functions(self):
         """Displays the graph."""
         self.graph.display_all()
-
-
-class DirectExecutor:
-    def check_input_type(self, node: node.Node, input: typing.Any) -> bool:
-        return node.type == typing.Any or isinstance(input, node.type)
-
-    def execute(self, node: node.Node, kwargs: typing.Dict[str, typing.Any]) -> typing.Any:
-        return node.callable(**kwargs)
-
-    def build_data_frame(self, columns: typing.Dict[str, typing.Any]) -> pd.DataFrame:
-        return pd.DataFrame(columns)
 
 
 if __name__ == '__main__':

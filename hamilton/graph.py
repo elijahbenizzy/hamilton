@@ -11,6 +11,7 @@ from typing import Type, Dict, Any, Callable, Tuple, Set, Collection, List
 from hamilton import function_modifiers
 from hamilton import node
 from hamilton.node import NodeSource, DependencyType
+from hamilton import base
 
 logger = logging.getLogger(__name__)
 
@@ -97,16 +98,16 @@ def create_function_graph(*modules: ModuleType, config: Dict[str, Any]) -> Dict[
 
 
 class FunctionGraph(object):
-    def __init__(self, *modules: ModuleType, config: Dict[str, Any], executor = None):
+    def __init__(self, *modules: ModuleType, config: Dict[str, Any], executor: base.HamiltonExecutor = None):
         """Initializes a function graph by crawling through modules. Function graph must have a config,
         as the config could determine the shape of the graph.
 
         :param modules: Modules to crawl for functions
-        :param config:
+        :param config: this is configuration and/or initial data.
+        :param executor: how we execute nodes in the graph
         """
         if executor is None:
-            from .driver import DirectExecutor
-            executor = DirectExecutor()
+            executor = base.SimplePythonDataFrameExecutor()
 
         self._config = config
         self.nodes = create_function_graph(*modules, config=self._config)
@@ -224,20 +225,22 @@ class FunctionGraph(object):
     @staticmethod
     def execute_static(nodes: Collection[node.Node],
                        inputs: Dict[str, Any],
-                       executor,
+                       executor: base.HamiltonExecutor,
                        computed: Dict[str, Any] = None,
                        overrides: Dict[str, Any] = None):
         """Executes computation on the given graph, inputs, and memoized computation.
-                To override a value, utilize `overrides`.
-                To pass in a value to ensure we don't compute data twice, use `computed`.
-                Don't use `computed` to override a value, you will not get the results you expect.
 
-                :param nodes: the graph to traverse for execution.
-                :param inputs: the inputs provided. These will only be called if a node is "user-defined"
-                :param computed: memoized storage to speed up computation. Usually an empty dict.
-                :param overrides: any inputs we want to user to override actual computation
-                :return: the passed in dict for memoized storage.
-                """
+        To override a value, utilize `overrides`.
+        To pass in a value to ensure we don't compute data twice, use `computed`.
+        Don't use `computed` to override a value, you will not get the results you expect.
+
+        :param nodes: the graph to traverse for execution.
+        :param inputs: the inputs provided. These will only be called if a node is "user-defined"
+        :param executor: how we will execute the nodes in the graph.
+        :param computed: memoized storage to speed up computation. Usually an empty dict.
+        :param overrides: any inputs we want to user to override actual computation
+        :return: the passed in dict for memoized storage.
+        """
 
         if overrides is None:
             overrides = {}
@@ -267,7 +270,7 @@ class FunctionGraph(object):
                     if dependency.name in computed:
                         kwargs[dependency.name] = computed[dependency.name]
                 try:
-                    value = executor.execute(node, kwargs)
+                    value = executor.execute_node(node, kwargs)
                 except Exception as e:
                     logger.exception(f'Node {node.name} encountered an error')
                     raise

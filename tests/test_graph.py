@@ -3,7 +3,7 @@ import inspect
 import pandas as pd
 import pytest
 
-from hamilton import graph
+from hamilton import graph, base
 from hamilton import node
 from hamilton import driver
 import tests.resources.bad_functions
@@ -161,7 +161,7 @@ def create_testing_nodes():
 
 def test_execute():
     """Tests graph execution along with basic memoization since A is depended on by two functions."""
-    executor = driver.DirectExecutor()
+    executor = base.SimplePythonDataFrameExecutor()
     nodes = create_testing_nodes()
     inputs = {
         'b': 2,
