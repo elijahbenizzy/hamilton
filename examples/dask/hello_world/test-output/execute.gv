@@ -1,0 +1,32 @@
+// Dependency Graph
+digraph {
+	spend [label=spend]
+	spend_zero_mean [label=spend_zero_mean]
+	spend_partitions [label=spend_partitions]
+	spend_zero_mean_unit_variance [label=spend_zero_mean_unit_variance]
+	avg_3wk_spend [label=avg_3wk_spend]
+	spend_mean [label=spend_mean]
+	spend_std_dev [label=spend_std_dev]
+	signups [label=signups]
+	spend_per_signup [label=spend_per_signup]
+	signups_partitions [label=signups_partitions]
+	signups_location [label=signups_location]
+	spend_location [label=spend_location]
+	spend_partitions [label="UD: spend_partitions"]
+	signups_location [label="UD: signups_location"]
+	spend_location [label="UD: spend_location"]
+	signups_partitions [label="UD: signups_partitions"]
+	spend_location -> spend
+	spend_partitions -> spend
+	spend -> spend_zero_mean
+	spend_mean -> spend_zero_mean
+	spend_zero_mean -> spend_zero_mean_unit_variance
+	spend_std_dev -> spend_zero_mean_unit_variance
+	spend -> avg_3wk_spend
+	spend -> spend_mean
+	spend -> spend_std_dev
+	signups_location -> signups
+	signups_partitions -> signups
+	spend -> spend_per_signup
+	signups -> spend_per_signup
+}
