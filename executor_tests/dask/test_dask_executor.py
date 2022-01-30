@@ -8,7 +8,7 @@ from distributed import Client
 
 from hamilton.driver import Driver
 
-from . import example_module
+from ..resources import example_module
 
 
 @pytest.fixture
@@ -37,3 +37,4 @@ def test_dask_executor(client):
     df = dr.execute(output_columns)
 
     assert set(df) == set(output_columns)
+    # TODO: do some more asserting?

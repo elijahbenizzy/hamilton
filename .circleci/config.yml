@@ -81,6 +81,60 @@ jobs:
           command: |
             pip install pre-commit
             pre-commit run --all-files
+  dask-py36:
+    docker:
+      - image: circleci/python:3.6
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+    steps:
+      - checkout
+      - run:
+          name: install hamilton dependencies + dask
+          command: |
+            python -m venv venv || virtualenv venv
+            . venv/bin/activate
+            python --version
+            pip --version
+            pip install -r requirements-test.txt
+            pip install -r requirements.txt
+            pip install "dask[complete]"
+
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python -m pytest executor_tests/dask
+  dask-py37:
+    docker:
+      - image: circleci/python:3.7
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+    steps:
+      - checkout
+      - run:
+          name: install hamilton dependencies + dask
+          command: |
+            python -m venv venv || virtualenv venv
+            . venv/bin/activate
+            python --version
+            pip --version
+            pip install -r requirements-test.txt
+            pip install -r requirements.txt
+            pip install "dask[complete]"
+
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python -m pytest executor_tests/dask
 workflow:
   version: 2
 
@@ -88,3 +142,5 @@ workflow:
     - build
     - build-py37
     - pre-commit
+    - dask-py37
+    - dask-py38
